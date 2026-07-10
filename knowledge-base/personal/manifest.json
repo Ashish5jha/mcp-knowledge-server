@@ -1,0 +1,66 @@
+{
+  "profile": "personal",
+  "version": "2026-07-10T15:11:10.195Z",
+  "documents": [
+    {
+      "id": "proj-mcp-knowledge-server",
+      "path": "projects/mcp-knowledge-server.md",
+      "title": "MCP Knowledge Server",
+      "type": "project",
+      "tags": [
+        "mcp",
+        "cloudflare",
+        "workers",
+        "ai",
+        "knowledge-base"
+      ],
+      "keywords": [
+        "mcp",
+        "model-context-protocol",
+        "cloudflare",
+        "worker",
+        "knowledge",
+        "retrieval",
+        "ai",
+        "llm"
+      ],
+      "related": [
+        "skill-typescript",
+        "skill-cloudflare-workers"
+      ],
+      "summary": "A Cloudflare Worker that acts as a remote MCP server, giving AI assistants structured read-only access to a personal knowledge base stored as Markdown in GitHub.",
+      "priority": 1,
+      "updated_at": "Fri Jul 10 2026 05:30:00 GMT+0530 (India Standard Time)"
+    },
+    {
+      "id": "skill-typescript",
+      "path": "skills/typescript.md",
+      "title": "TypeScript & Node.js",
+      "type": "skill",
+      "tags": [
+        "typescript",
+        "nodejs",
+        "javascript",
+        "frontend",
+        "backend"
+      ],
+      "keywords": [
+        "typescript",
+        "ts",
+        "node",
+        "javascript",
+        "js",
+        "types",
+        "generics",
+        "async",
+        "await"
+      ],
+      "related": [
+        "proj-mcp-knowledge-server"
+      ],
+      "summary": "Strong TypeScript skills covering type system, generics, utility types, async/await, and Node.js ecosystem for both backend services and tooling scripts.",
+      "priority": 2,
+      "updated_at": "Mon Jun 01 2026 05:30:00 GMT+0530 (India Standard Time)"
+    }
+  ]
+}

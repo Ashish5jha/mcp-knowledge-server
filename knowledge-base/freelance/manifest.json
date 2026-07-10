@@ -1,0 +1,66 @@
+{
+  "profile": "freelance",
+  "version": "2026-07-10T15:11:10.199Z",
+  "documents": [
+    {
+      "id": "client-novoinvent",
+      "path": "clients/novoinvent.md",
+      "title": "Novoinvent Software — Software Engineer",
+      "type": "client",
+      "tags": [
+        "java",
+        "spring-boot",
+        "backend",
+        "employment",
+        "enterprise"
+      ],
+      "keywords": [
+        "novoinvent",
+        "software",
+        "engineer",
+        "java",
+        "spring",
+        "backend",
+        "enterprise",
+        "client"
+      ],
+      "related": [
+        "skill-spring-boot",
+        "proj-spring-commerce"
+      ],
+      "summary": "Current employment as Software Engineer at Novoinvent Software. Focus area is Java backend development with Spring Boot, REST APIs, PostgreSQL, and AWS.",
+      "priority": 1,
+      "updated_at": "Wed Jul 01 2026 05:30:00 GMT+0530 (India Standard Time)"
+    },
+    {
+      "id": "domain-cloudflare-workers",
+      "path": "domains/cloudflare-workers.md",
+      "title": "Cloudflare Workers & Edge Computing",
+      "type": "domain",
+      "tags": [
+        "cloudflare",
+        "workers",
+        "edge",
+        "serverless",
+        "kv",
+        "wrangler"
+      ],
+      "keywords": [
+        "cloudflare",
+        "worker",
+        "edge",
+        "serverless",
+        "kv",
+        "durable-objects",
+        "wrangler",
+        "deploy"
+      ],
+      "related": [
+        "proj-mcp-knowledge-server"
+      ],
+      "summary": "Domain expertise in Cloudflare Workers platform — building, deploying, and optimizing edge serverless functions with KV storage, Cron Triggers, and the Workers runtime.",
+      "priority": 1,
+      "updated_at": "Sun Jul 05 2026 05:30:00 GMT+0530 (India Standard Time)"
+    }
+  ]
+}
