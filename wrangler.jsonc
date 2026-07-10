@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mcp-knowledge-server",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-03-20",
+  "kv_namespaces": [
+    {
+      "binding": "KNOWLEDGE_CACHE",
+      "id": "insert-kv-id-here"
+    }
+  ],
+  "triggers": {
+    "crons": ["0 */6 * * *"]
+  }
+}
