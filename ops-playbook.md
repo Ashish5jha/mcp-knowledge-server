@@ -136,6 +136,27 @@ npx wrangler deploy
 
 ---
 
+## 🔀 Scenario 5: Hosting your documents in a completely different GitHub repository
+
+If your Markdown documents live in a completely different repository (not in the `mcp-knowledge-server` repository), you need to set up the build scripts there so the manifest gets generated automatically when you push.
+
+### 1. Copy the build scripts to your other repository
+From this project, copy the following items into the root of your *other* repository where your documents live:
+- The `scripts/build-manifest.js` file
+- The `scripts/package.json` file (creates a `scripts` folder if needed)
+- The GitHub workflow file `.github/workflows/build-manifest.yml`
+
+### 2. Update the workflow file
+In your new repository's `.github/workflows/build-manifest.yml`, make sure the paths match where you are storing the documents (e.g. `knowledge-base/**`).
+
+### 3. Update the Server Registry
+Back in this project (or via the terminal), update the KV registry to point to your *other* repository's raw URLs (as described in **Scenario 3**). You do *not* need to redeploy the worker.
+
+### 4. Trigger a Reindex
+Once the GitHub Action runs in your other repository and creates the `manifest.json`, call the `reindex_profile` MCP tool from your AI assistant to force the Cloudflare Worker to pull the new data.
+
+---
+
 ## 🔍 How to check logs or troubleshoot issues
 
 If your server is failing to respond, run the Cloudflare tail tool to inspect incoming traffic and errors in real-time:
