@@ -10,6 +10,11 @@ import { tokenize } from "../../indexer/buildIndex";
 const PROFILES = ["company", "personal", "freelance"] as const;
 type Profile = (typeof PROFILES)[number];
 
+// Term-match weights: title > tags/keywords > summary
+const WEIGHT_TITLE = 3;
+const WEIGHT_TAGS = 2;
+const WEIGHT_SUMMARY = 1;
+
 /**
  * Register all four MCP tools on the given McpServer instance.
  */
@@ -70,13 +75,30 @@ export function registerTools(server: McpServer, env: Env): void {
         };
       }
 
-      // Score each doc by term overlap
+      // Score each doc with weighted term overlap:
+      //   title match  → WEIGHT_TITLE  (3)
+      //   tag/keyword  → WEIGHT_TAGS   (2)
+      //   summary      → WEIGHT_SUMMARY (1)
       const scores: Record<string, number> = {};
 
-      for (const term of queryTerms) {
-        const matchingIds = index.termIndex[term] ?? [];
-        for (const id of matchingIds) {
-          scores[id] = (scores[id] ?? 0) + 1;
+      for (const doc of index.documents) {
+        let docScore = 0;
+
+        const titleTerms = new Set(tokenize(doc.title));
+        const tagTerms = new Set([
+          ...doc.tags.flatMap(tokenize),
+          ...doc.keywords.flatMap(tokenize),
+        ]);
+        const summaryTerms = new Set(tokenize(doc.summary));
+
+        for (const term of queryTerms) {
+          if (titleTerms.has(term)) docScore += WEIGHT_TITLE;
+          else if (tagTerms.has(term)) docScore += WEIGHT_TAGS;
+          else if (summaryTerms.has(term)) docScore += WEIGHT_SUMMARY;
+        }
+
+        if (docScore > 0) {
+          scores[doc.id] = docScore;
         }
       }
 
@@ -91,16 +113,17 @@ export function registerTools(server: McpServer, env: Env): void {
         };
       }
 
-      const maxScore = Math.max(...Object.values(scores));
+      // Max weighted score if every term hit a title
+      const maxPossibleScore = queryTerms.length * WEIGHT_TITLE;
 
       const results = Object.entries(scores)
         .sort(([, a], [, b]) => b - a)
         .slice(0, limit)
         .map(([id, score]) => {
           const doc = index.documents.find((d) => d.id === id)!;
-          const ratio = score / queryTerms.length;
+          const ratio = score / maxPossibleScore;
           const confidence =
-            ratio >= 1 ? "exact" : ratio >= 0.5 ? "partial" : "related-only";
+            ratio >= 0.8 ? "exact" : ratio >= 0.4 ? "partial" : "related-only";
           return {
             id: doc.id,
             title: doc.title,
@@ -109,6 +132,7 @@ export function registerTools(server: McpServer, env: Env): void {
             tags: doc.tags,
             related: doc.related,
             path: doc.path,
+            score,
             confidence,
           };
         });
@@ -117,7 +141,7 @@ export function registerTools(server: McpServer, env: Env): void {
         content: [
           {
             type: "text",
-            text: JSON.stringify({ profile, query, results }, null, 2),
+            text: JSON.stringify({ profile, query, total: results.length, results }, null, 2),
           },
         ],
       };
@@ -171,6 +195,8 @@ export function registerTools(server: McpServer, env: Env): void {
         };
       }
 
+      // Return metadata and body as separate text blocks so an LLM can read
+      // Markdown natively without needing to unescape JSON.
       return {
         content: [
           {
@@ -181,13 +207,20 @@ export function registerTools(server: McpServer, env: Env): void {
                 title: doc.title,
                 type: doc.type,
                 tags: doc.tags,
+                keywords: doc.keywords,
+                related: doc.related,
                 summary: doc.summary,
                 updated_at: doc.updated_at,
-                body,
+                priority: doc.priority,
+                profile,
               },
               null,
               2
             ),
+          },
+          {
+            type: "text",
+            text: body,
           },
         ],
       };
