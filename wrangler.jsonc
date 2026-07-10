@@ -6,7 +6,7 @@
   "kv_namespaces": [
     {
       "binding": "KNOWLEDGE_CACHE",
-      "id": "insert-kv-id-here"
+      "id": "ff751ff1f56049b9a7cc118dc03f4999"
     }
   ],
   "triggers": {
