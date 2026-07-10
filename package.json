@@ -6,17 +6,27 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:manifests": "node scripts/build-manifest.js --all",
+    "build:manifest:company": "node scripts/build-manifest.js knowledge-base/company company",
+    "build:manifest:personal": "node scripts/build-manifest.js knowledge-base/personal personal",
+    "build:manifest:freelance": "node scripts/build-manifest.js knowledge-base/freelance freelance"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Ashish5jha/mcp-knowledge-server.git"
   },
-  "keywords": ["mcp", "cloudflare", "workers", "knowledge-base"],
+  "keywords": [
+    "mcp",
+    "cloudflare",
+    "workers",
+    "knowledge-base"
+  ],
   "author": "Ashish Jha",
   "license": "ISC",
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260710.1",
+    "gray-matter": "^4.0.3",
     "typescript": "^7.0.2",
     "wrangler": "^4.110.0"
   },

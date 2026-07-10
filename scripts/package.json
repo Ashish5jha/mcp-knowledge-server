@@ -1,0 +1,15 @@
+{
+  "name": "mcp-knowledge-scripts",
+  "version": "1.0.0",
+  "description": "Manifest generation scripts for mcp-knowledge-server",
+  "type": "module",
+  "scripts": {
+    "build-all": "node build-manifest.js --all",
+    "build-company": "node build-manifest.js ../knowledge-base/company company",
+    "build-personal": "node build-manifest.js ../knowledge-base/personal personal",
+    "build-freelance": "node build-manifest.js ../knowledge-base/freelance freelance"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3"
+  }
+}
