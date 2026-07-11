@@ -25,14 +25,35 @@ export default {
 
       registerTools(server, env);
 
-      // Stateless mode: sessionIdGenerator is undefined → no session tracking
+      const sessionId = crypto.randomUUID();
       const transport = new WebStandardStreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
         enableJsonResponse: true,
       });
 
       await server.connect(transport);
-      const response = await transport.handleRequest(request);
+      let response = await transport.handleRequest(request);
+
+      // Patch for older SSE clients (Cursor, Claude) that expect the 'endpoint' event
+      // The new WebStandardStreamableHTTPServerTransport doesn't emit it by default.
+      if (request.method === "GET" && response.status === 200 && response.body) {
+        const { readable, writable } = new TransformStream();
+        const writer = writable.getWriter();
+        
+        // Write the endpoint event first
+        const endpointStr = `event: endpoint\ndata: /mcp?sessionId=${sessionId}\n\n`;
+        writer.write(new TextEncoder().encode(endpointStr));
+        writer.releaseLock();
+        
+        // Pipe the rest of the stream
+        response.body.pipeTo(writable);
+        
+        response = new Response(readable, {
+          status: response.status,
+          headers: response.headers
+        });
+      }
+
       ctx.waitUntil(server.close());
       return response;
     }

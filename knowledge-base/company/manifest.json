@@ -1,12 +1,12 @@
 {
   "profile": "company",
-  "version": "2026-07-10T15:17:12.376Z",
+  "version": "2026-07-10T15:42:25.663Z",
   "documents": [
     {
       "id": "proj-spring-commerce",
-      "path": "projects/spring-commerce.md",
       "title": "Spring Commerce — E-Commerce Backend",
       "type": "project",
+      "summary": "Full e-commerce backend built with Spring Boot 3.3, JPA, Hibernate, MySQL, Docker, and Spring Security. Handles products, orders, users, and payments.",
       "tags": [
         "ecommerce",
         "spring-boot",
@@ -28,15 +28,15 @@
         "skill-spring-boot",
         "skill-postgresql"
       ],
-      "summary": "Full e-commerce backend built with Spring Boot 3.3, JPA, Hibernate, MySQL, Docker, and Spring Security. Handles products, orders, users, and payments.",
       "priority": 2,
-      "updated_at": "Mon Jun 15 2026 00:00:00 GMT+0000 (Coordinated Universal Time)"
+      "updated_at": "2026-06-15",
+      "path": "projects/spring-commerce.md"
     },
     {
       "id": "skill-spring-boot",
-      "path": "skills/spring-boot.md",
       "title": "Spring Boot Backend Development",
       "type": "skill",
+      "summary": "Expert-level Spring Boot development including REST APIs, JPA/Hibernate ORM, Spring Security, and microservices architecture.",
       "tags": [
         "spring-boot",
         "java",
@@ -59,9 +59,9 @@
         "skill-postgresql",
         "proj-spring-commerce"
       ],
-      "summary": "Expert-level Spring Boot development including REST APIs, JPA/Hibernate ORM, Spring Security, and microservices architecture.",
       "priority": 1,
-      "updated_at": "Wed Jul 01 2026 00:00:00 GMT+0000 (Coordinated Universal Time)"
+      "updated_at": "2026-07-01",
+      "path": "skills/spring-boot.md"
     }
   ]
 }
