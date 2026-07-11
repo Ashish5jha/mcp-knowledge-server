@@ -3,20 +3,77 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { Env } from "./types";
 import { registerTools } from "./mcp/tools/index";
 import { buildIndex } from "./indexer/buildIndex";
+import {
+  handleOAuthDiscovery,
+  handleAuthorize,
+  handleCallback,
+  handleToken,
+  isValidToken,
+} from "./oauth/handler";
 
 const PROFILES = ["company", "personal", "freelance"] as const;
 
+// CORS preflight helper — needed so browser-based MCP clients can connect
+function corsHeaders(): HeadersInit {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Mcp-Session-Id, Mcp-Protocol-Version",
+  };
+}
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    // ── Auth check — must pass before any MCP routing ──────────────────────────
-    const auth = request.headers.get("Authorization");
-    if (auth !== `Bearer ${env.AUTH_TOKEN}`) {
-      return new Response("Unauthorized", { status: 401 });
-    }
-
     const url = new URL(request.url);
 
-    // ── MCP endpoint (stateless, one server instance per request) ──────────────
+    // ── CORS preflight ─────────────────────────────────────────────────────────
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders() });
+    }
+
+    // ── OAuth public routes (no auth required) ─────────────────────────────────
+    // These MUST be reachable before the auth check so clients can discover OAuth.
+
+    if (url.pathname === "/.well-known/oauth-authorization-server") {
+      return handleOAuthDiscovery(env.WORKER_URL);
+    }
+
+    if (url.pathname === "/oauth/authorize") {
+      return handleAuthorize(request, env);
+    }
+
+    if (url.pathname === "/oauth/callback") {
+      return handleCallback(request, env);
+    }
+
+    if (url.pathname === "/oauth/token") {
+      return handleToken(request, env, env.WORKER_URL);
+    }
+
+    // ── Auth gate — Bearer (static) OR Bearer (OAuth token in KV) ─────────────
+    const authHeader = request.headers.get("Authorization");
+    const authenticated = await isValidToken(authHeader, env);
+
+    if (!authenticated) {
+      return new Response(
+        JSON.stringify({
+          error: "unauthorized",
+          error_description: "Provide a valid Bearer token or complete the OAuth 2.1 flow.",
+          // Hint clients to the discovery doc so they can auto-start OAuth
+          oauth_discovery: `${env.WORKER_URL}/.well-known/oauth-authorization-server`,
+        }),
+        {
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+            "WWW-Authenticate": `Bearer realm="${env.WORKER_URL}", error="unauthorized"`,
+            ...corsHeaders(),
+          },
+        }
+      );
+    }
+
+    // ── MCP endpoint ───────────────────────────────────────────────────────────
     if (url.pathname === "/mcp") {
       const server = new McpServer({
         name: "mcp-knowledge-server",
@@ -27,38 +84,50 @@ export default {
 
       const sessionId = crypto.randomUUID();
       const transport = new WebStandardStreamableHTTPServerTransport({
-        sessionIdGenerator: undefined,
+        sessionIdGenerator: undefined, // stateless — one transport per request
         enableJsonResponse: true,
       });
 
       await server.connect(transport);
       let response = await transport.handleRequest(request);
 
-      // Patch for older SSE clients (Cursor, Claude) that expect the 'endpoint' event
-      // The new WebStandardStreamableHTTPServerTransport doesn't emit it by default.
+      // ── SSE compatibility patch ──────────────────────────────────────────────
+      // Older SSE clients (Cursor, Claude Code, Antigravity) expect an
+      // `event: endpoint` frame before the stream. The newer Streamable HTTP
+      // transport doesn't emit it, so we inject it manually.
       if (request.method === "GET" && response.status === 200 && response.body) {
         const { readable, writable } = new TransformStream();
-        const writer = writable.getWriter();
-        
-        // Write the endpoint event first
-        const endpointStr = `event: endpoint\ndata: /mcp?sessionId=${sessionId}\n\n`;
-        writer.write(new TextEncoder().encode(endpointStr));
-        writer.releaseLock();
-        
-        // Pipe the rest of the stream
-        response.body.pipeTo(writable);
-        
+
+        ctx.waitUntil(
+          (async () => {
+            try {
+              const writer = writable.getWriter();
+              const endpointEvent = `event: endpoint\ndata: /mcp?sessionId=${sessionId}\n\n`;
+              await writer.write(new TextEncoder().encode(endpointEvent));
+              writer.releaseLock();
+              await response.body!.pipeTo(writable);
+            } catch (e) {
+              console.error("SSE stream patch error:", e);
+            }
+          })()
+        );
+
         response = new Response(readable, {
           status: response.status,
-          headers: response.headers
+          headers: { ...Object.fromEntries(response.headers), ...corsHeaders() },
         });
+      } else {
+        // Add CORS headers to non-SSE responses too
+        const headers = new Headers(response.headers);
+        Object.entries(corsHeaders()).forEach(([k, v]) => headers.set(k, v));
+        response = new Response(response.body, { status: response.status, headers });
       }
 
       ctx.waitUntil(server.close());
       return response;
     }
 
-    return new Response("Not found", { status: 404 });
+    return new Response("Not found", { status: 404, headers: corsHeaders() });
   },
 
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {

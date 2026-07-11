@@ -1,6 +1,11 @@
 export interface Env {
   AUTH_TOKEN: string;
   KNOWLEDGE_CACHE: KVNamespace;
+  // OAuth 2.1 (GitHub-backed)
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: string;
+  GITHUB_OWNER_LOGIN: string; // your GitHub username — only you can OAuth in
+  WORKER_URL: string;         // e.g. https://mcp-knowledge-server.ashish-biller.workers.dev
 }
 
 export type Profile = "company" | "personal" | "freelance";

@@ -12,5 +12,10 @@
   ],
   "triggers": {
     "crons": ["0 */6 * * *"]
+  },
+  "vars": {
+    "GITHUB_CLIENT_ID": "Ov23liAfyfuaBA3m1WW7",
+    "GITHUB_OWNER_LOGIN": "Ashish5jha",
+    "WORKER_URL": "https://mcp-knowledge-server.ashish-biller.workers.dev"
   }
 }
