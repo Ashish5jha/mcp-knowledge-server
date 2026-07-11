@@ -8,6 +8,7 @@ import {
   handleAuthorize,
   handleCallback,
   handleToken,
+  handleRegister,
   isValidToken,
 } from "./oauth/handler";
 
@@ -38,6 +39,10 @@ export default {
       return handleOAuthDiscovery(env.WORKER_URL);
     }
 
+    if (url.pathname === "/oauth/register" && request.method === "POST") {
+      return handleRegister(request, env);
+    }
+
     if (url.pathname === "/oauth/authorize") {
       return handleAuthorize(request, env);
     }
@@ -47,7 +52,7 @@ export default {
     }
 
     if (url.pathname === "/oauth/token") {
-      return handleToken(request, env, env.WORKER_URL);
+      return handleToken(request, env);
     }
 
     // ── Auth gate — Bearer (static) OR Bearer (OAuth token in KV) ─────────────
