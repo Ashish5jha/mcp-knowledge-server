@@ -1,25 +1,25 @@
 import { Env, PROFILES, Profile } from "../types";
 import {
-  compareProfile,
-  getConsoleProfiles,
-  getConsoleStatus,
-  getDocument,
-  getSearchResults,
-  reindexProfile,
+	compareProfile,
+	getConsoleProfiles,
+	getConsoleStatus,
+	getDocument,
+	getSearchResults,
+	reindexProfile,
 } from "./logic";
 
 function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      "Cache-Control": "no-store",
-    },
-  });
+	return new Response(JSON.stringify(data), {
+		status,
+		headers: {
+			"Content-Type": "application/json; charset=utf-8",
+			"Cache-Control": "no-store",
+		},
+	});
 }
 
 function htmlPage(): string {
-  return `<!doctype html>
+	return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -37,7 +37,6 @@ function htmlPage(): string {
       --muted: #97a0ac;
       --muted-2: #7d8793;
       --accent: #7e95ad;
-      --accent-2: #607187;
       --ok: #4c7f68;
       --warn: #94764b;
       --bad: #9b5d5d;
@@ -56,10 +55,7 @@ function htmlPage(): string {
       color: var(--text);
     }
 
-    button, input, select, textarea {
-      font: inherit;
-      color: inherit;
-    }
+    button, input, select, textarea { font: inherit; color: inherit; }
 
     .shell {
       max-width: 1600px;
@@ -76,11 +72,7 @@ function htmlPage(): string {
       box-shadow: var(--shadow);
     }
 
-    .topbar {
-      display: grid;
-      gap: 16px;
-      padding: 18px 20px;
-    }
+    .topbar { display: grid; gap: 16px; padding: 18px 20px; }
 
     .brand {
       display: flex;
@@ -98,17 +90,9 @@ function htmlPage(): string {
       margin-bottom: 6px;
     }
 
-    h1 {
-      margin: 0;
-      font-size: 22px;
-      font-weight: 700;
-    }
+    h1 { margin: 0; font-size: 22px; font-weight: 700; }
 
-    .subtitle {
-      color: var(--muted);
-      margin-top: 4px;
-      max-width: 880px;
-    }
+    .subtitle { color: var(--muted); margin-top: 4px; max-width: 880px; }
 
     .controls {
       display: grid;
@@ -117,15 +101,8 @@ function htmlPage(): string {
       align-items: end;
     }
 
-    .field {
-      display: grid;
-      gap: 6px;
-    }
-
-    .field label {
-      font-size: 12px;
-      color: var(--muted);
-    }
+    .field { display: grid; gap: 6px; }
+    .field label { font-size: 12px; color: var(--muted); }
 
     input, select, textarea {
       width: 100%;
@@ -134,7 +111,6 @@ function htmlPage(): string {
       border-radius: 12px;
       padding: 11px 12px;
       outline: none;
-      transition: border-color 0.15s ease, transform 0.12s ease, background 0.15s ease;
     }
 
     input:focus, select:focus, textarea:focus {
@@ -158,14 +134,8 @@ function htmlPage(): string {
       background: linear-gradient(180deg, #313840, #262c34);
     }
 
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.55;
-    }
-
-    .ghost {
-      background: transparent;
-    }
+    button:disabled { cursor: not-allowed; opacity: 0.55; }
+    .ghost { background: transparent; }
 
     .statusline {
       display: flex;
@@ -177,13 +147,7 @@ function htmlPage(): string {
       font-size: 12px;
     }
 
-    .token-state {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 26px;
-    }
-
+    .token-state { display: flex; align-items: center; gap: 8px; min-height: 26px; }
     .dot {
       width: 9px;
       height: 9px;
@@ -191,50 +155,17 @@ function htmlPage(): string {
       background: #596372;
       box-shadow: 0 0 0 3px rgba(89, 99, 114, 0.15);
     }
-
     .dot.ok { background: var(--ok); box-shadow: 0 0 0 3px rgba(76, 127, 104, 0.14); }
     .dot.warn { background: var(--warn); box-shadow: 0 0 0 3px rgba(148, 118, 75, 0.16); }
     .dot.bad { background: var(--bad); box-shadow: 0 0 0 3px rgba(155, 93, 93, 0.16); }
 
-    .grid {
-      display: grid;
-      gap: 16px;
-    }
+    .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .card { padding: 16px; min-height: 126px; }
+    .card h2, .panel h2 { margin: 0 0 10px; font-size: 14px; color: #f0f2f6; }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .card {
-      padding: 16px;
-      min-height: 126px;
-    }
-
-    .card h2, .panel h2 {
-      margin: 0 0 10px;
-      font-size: 14px;
-      letter-spacing: 0.02em;
-      color: #f0f2f6;
-    }
-
-    .metric {
-      display: grid;
-      gap: 4px;
-      margin-top: 8px;
-    }
-
-    .metric .value {
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-    }
-
-    .metric .label, .small-muted {
-      color: var(--muted);
-      font-size: 12px;
-    }
+    .metric { display: grid; gap: 4px; margin-top: 8px; }
+    .metric .value { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; }
+    .metric .label, .small-muted { color: var(--muted); font-size: 12px; }
 
     .badge {
       display: inline-flex;
@@ -247,32 +178,14 @@ function htmlPage(): string {
       color: var(--muted);
       background: rgba(255,255,255,0.02);
     }
+    .badge.ok { color: #b8d9c5; border-color: rgba(76,127,104,0.4); background: rgba(76,127,104,0.12); }
+    .badge.warn { color: #ebd0a6; border-color: rgba(148,118,75,0.38); background: rgba(148,118,75,0.12); }
+    .badge.bad { color: #f0baba; border-color: rgba(155,93,93,0.4); background: rgba(155,93,93,0.12); }
 
-    .badge.ok { color: #b8d9c5; border-color: rgba(76, 127, 104, 0.4); background: rgba(76, 127, 104, 0.12); }
-    .badge.warn { color: #ebd0a6; border-color: rgba(148, 118, 75, 0.38); background: rgba(148, 118, 75, 0.12); }
-    .badge.bad { color: #f0baba; border-color: rgba(155, 93, 93, 0.4); background: rgba(155, 93, 93, 0.12); }
-
-    .main {
-      display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      gap: 16px;
-      align-items: start;
-    }
-
-    .panel {
-      padding: 16px;
-    }
-
-    .stack {
-      display: grid;
-      gap: 12px;
-    }
-
-    .kvlist {
-      display: grid;
-      gap: 10px;
-    }
-
+    .main { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 16px; align-items: start; }
+    .panel { padding: 16px; }
+    .stack { display: grid; gap: 12px; }
+    .kvlist { display: grid; gap: 10px; }
     .kv {
       display: grid;
       grid-template-columns: 180px 1fr;
@@ -282,24 +195,10 @@ function htmlPage(): string {
       border-radius: 14px;
       background: rgba(255, 255, 255, 0.02);
     }
+    .kv .key { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .kv .value { overflow-wrap: anywhere; color: #e9edf2; }
 
-    .kv .key {
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .kv .value {
-      overflow-wrap: anywhere;
-      color: #e9edf2;
-    }
-
-    .list {
-      display: grid;
-      gap: 10px;
-    }
-
+    .list { display: grid; gap: 10px; }
     .item {
       display: grid;
       gap: 6px;
@@ -308,57 +207,23 @@ function htmlPage(): string {
       border-radius: 14px;
       background: rgba(255, 255, 255, 0.02);
     }
-
-    .item-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .item-title {
-      font-weight: 650;
-    }
-
-    .item-meta {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
+    .item-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .item-title { font-weight: 650; }
+    .item-meta { color: var(--muted); font-size: 12px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .chip {
       border: 1px solid var(--border);
       border-radius: 999px;
       padding: 3px 8px;
       font-size: 12px;
       color: #c8d0da;
-      background: rgba(255, 255, 255, 0.02);
+      background: rgba(255,255,255,0.02);
     }
 
-    .search-layout {
-      display: grid;
-      gap: 16px;
-      grid-template-columns: 1fr;
-    }
+    .search-layout { display: grid; gap: 16px; grid-template-columns: 1fr; }
+    .search-bar { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; }
 
-    .search-bar {
-      display: grid;
-      grid-template-columns: 1fr auto auto;
-      gap: 10px;
-    }
-
-    .doc-viewer {
-      display: grid;
-      gap: 10px;
-      min-height: 240px;
-    }
-
+    .doc-viewer { display: grid; gap: 10px; min-height: 240px; }
     .doc-body {
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -367,7 +232,6 @@ function htmlPage(): string {
       overflow: auto;
       max-height: 520px;
     }
-
     pre {
       margin: 0;
       white-space: pre-wrap;
@@ -376,11 +240,7 @@ function htmlPage(): string {
       color: #d8dde5;
     }
 
-    .footer-note {
-      color: var(--muted-2);
-      font-size: 12px;
-    }
-
+    .footer-note { color: var(--muted-2); font-size: 12px; }
     .muted-box {
       padding: 12px;
       border: 1px dashed var(--border);
@@ -405,7 +265,7 @@ function htmlPage(): string {
           <h1>MCP Knowledge Console</h1>
           <div class="subtitle">Inspect the exact Cloudflare KV index, GitHub manifest state, search results, and document bodies served by this worker.</div>
         </div>
-        <div class="token-state" id="tokenState"><span class="dot warn" id="tokenDot"></span><span id="tokenStateText">Token not loaded</span></div>
+        <div class="token-state"><span class="dot warn" id="tokenDot"></span><span id="tokenStateText">Token not loaded</span></div>
       </div>
 
       <div class="controls">
@@ -484,7 +344,7 @@ function htmlPage(): string {
 
         <div class="doc-viewer">
           <h2>Document viewer</h2>
-          <div class="muted-box" id="docMeta">Choose a search result or recent document to inspect the exact content returned by `get_document`.</div>
+          <div class="muted-box" id="docMeta">Choose a search result or recent document to inspect the exact content returned by get_document.</div>
           <div class="doc-body"><pre id="docBody">No document selected.</pre></div>
         </div>
       </div>
@@ -536,6 +396,22 @@ function htmlPage(): string {
       docBody: document.getElementById("docBody"),
     };
 
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function badgeClass(name) {
+      if (name === "fresh" || name === "in_sync" || name === "ok") return "ok";
+      if (name === "stale" || name === "missing") return "warn";
+      if (name === "error" || name === "out_of_sync") return "bad";
+      return "";
+    }
+
     function setToken(token) {
       state.token = token.trim();
       if (state.token) {
@@ -547,7 +423,7 @@ function htmlPage(): string {
     }
 
     function syncTokenState() {
-      const connected = Boolean(state.token);
+      var connected = Boolean(state.token);
       els.tokenInput.value = state.token;
       els.tokenDot.className = connected ? "dot ok" : "dot warn";
       els.tokenStateText.textContent = connected ? "Token loaded" : "Token not loaded";
@@ -561,15 +437,16 @@ function htmlPage(): string {
       return state.token ? { Authorization: "Bearer " + state.token } : {};
     }
 
-    async function requestJson(path, options = {}) {
-      const headers = Object.assign({ "Content-Type": "application/json" }, authHeaders(), options.headers || {});
-      const response = await fetch(path, Object.assign({}, options, { headers }));
+    async function requestJson(path, options) {
+      const opts = options || {};
+      const headers = Object.assign({ "Content-Type": "application/json" }, authHeaders(), opts.headers || {});
+      const response = await fetch(path, Object.assign({}, opts, { headers }));
       const text = await response.text();
       let data = null;
       if (text) {
         try {
           data = JSON.parse(text);
-        } catch {
+        } catch (error) {
           data = text;
         }
       }
@@ -580,29 +457,25 @@ function htmlPage(): string {
       return data;
     }
 
-    function badgeClass(state) {
-      if (state === "fresh" || state === "in_sync" || state === "ok") return "ok";
-      if (state === "stale" || state === "missing") return "warn";
-      if (state === "error" || state === "out_of_sync") return "bad";
-      return "";
+    function kvRow(key, value) {
+      return '<div class="kv"><div class="key">' + escapeHtml(key) + '</div><div class="value">' + escapeHtml(value) + '</div></div>';
     }
 
     function renderProfileList() {
-      els.profileSelect.innerHTML = state.profiles.map((profile) => {
-        const selected = profile.profile === state.profile ? "selected" : "";
-        return `<option value="${profile.profile}" ${selected}>${profile.profile}</option>`;
-      }).join("");
+      var html = "";
+      for (var i = 0; i < state.profiles.length; i += 1) {
+        var profile = state.profiles[i];
+        var selected = profile.profile === state.profile ? " selected" : "";
+        html += '<option value="' + escapeHtml(profile.profile) + '"' + selected + '>' + escapeHtml(profile.profile) + '</option>';
+      }
+      els.profileSelect.innerHTML = html;
       els.profileSelect.disabled = state.profiles.length === 0;
       if (!state.profile && state.profiles.length > 0) {
         state.profile = state.profiles[0].profile;
         els.profileSelect.value = state.profile;
       }
-      const current = state.profiles.find((entry) => entry.profile === state.profile);
-      els.profileSummary.textContent = current
-        ? current.manifestUrl
-          ? `${current.profile} · ${current.manifestUrl}`
-          : `${current.profile} · registry unavailable`
-        : "No profile selected";
+      var current = state.profiles.find(function (entry) { return entry.profile === state.profile; });
+      els.profileSummary.textContent = current ? (current.manifestUrl ? (current.profile + ' · ' + current.manifestUrl) : (current.profile + ' · registry unavailable')) : 'No profile selected';
     }
 
     function renderStatus(status) {
@@ -610,67 +483,47 @@ function htmlPage(): string {
       if (!status) return;
 
       els.indexVersion.textContent = status.cloudflareIndex.exists ? (status.cloudflareIndex.version || "unknown") : "missing";
-      els.indexBuiltAt.textContent = status.cloudflareIndex.exists && status.cloudflareIndex.builtAt ? `Built at ${status.cloudflareIndex.builtAt}` : "Built at —";
-      els.indexCount.textContent = status.cloudflareIndex.exists
-        ? `${status.cloudflareIndex.documentCount} documents in Cloudflare KV`
-        : "No Cloudflare index found";
+      els.indexBuiltAt.textContent = status.cloudflareIndex.exists && status.cloudflareIndex.builtAt ? ("Built at " + status.cloudflareIndex.builtAt) : "Built at —";
+      els.indexCount.textContent = status.cloudflareIndex.exists ? (status.cloudflareIndex.documentCount + " documents in Cloudflare KV") : "No Cloudflare index found";
 
       els.manifestVersion.textContent = status.githubManifest.reachable ? (status.githubManifest.version || "unknown") : "error";
-      els.manifestSource.textContent = status.githubManifest.manifestUrl ? status.githubManifest.manifestUrl : "Source unavailable";
+      els.manifestSource.textContent = status.githubManifest.manifestUrl || "Source unavailable";
       els.manifestCount.textContent = status.githubManifest.reachable
-        ? `${status.githubManifest.documentCount} documents in GitHub manifest`
-        : `GitHub manifest unavailable${status.githubManifest.error ? ` · ${status.githubManifest.error}` : ""}`;
+        ? (status.githubManifest.documentCount + " documents in GitHub manifest")
+        : ("GitHub manifest unavailable" + (status.githubManifest.error ? (" · " + status.githubManifest.error) : ""));
 
       els.freshnessState.textContent = status.freshness.state;
       els.freshnessState.className = "value badge " + badgeClass(status.freshness.state);
       els.freshnessReason.textContent = status.freshness.reason;
 
-      const registry = status.registry;
-      els.statusDetails.innerHTML = [
-        registry ? {
-          key: "Registry manifest URL",
-          value: registry.manifestUrl,
-        } : {
-          key: "Registry",
-          value: "Missing",
-        },
-        registry ? {
-          key: "Registry raw base",
-          value: registry.rawBase,
-        } : {
-          key: "Raw base",
-          value: "Missing",
-        },
-        {
-          key: "Cloudflare index",
-          value: status.cloudflareIndex.exists
-            ? `${status.cloudflareIndex.documentCount} docs · version ${status.cloudflareIndex.version || "unknown"}`
-            : "Missing",
-        },
-        {
-          key: "GitHub manifest",
-          value: status.githubManifest.reachable
-            ? `${status.githubManifest.documentCount} docs · version ${status.githubManifest.version || "unknown"}`
-            : `Error${status.githubManifest.error ? ` · ${status.githubManifest.error}` : ""}`,
-        },
-        {
-          key: "Freshness",
-          value: `${status.freshness.state} · ${status.freshness.reason}`,
-        },
-      ].map((row) => `<div class="kv"><div class="key">${row.key}</div><div class="value">${escapeHtml(row.value)}</div></div>`).join("");
+      var statusRows = [];
+      statusRows.push(kvRow("Registry manifest URL", status.registry ? status.registry.manifestUrl : "Missing"));
+      statusRows.push(kvRow("Registry raw base", status.registry ? status.registry.rawBase : "Missing"));
+      statusRows.push(kvRow("Cloudflare index", status.cloudflareIndex.exists ? (status.cloudflareIndex.documentCount + " docs · version " + (status.cloudflareIndex.version || "unknown")) : "Missing"));
+      statusRows.push(kvRow("GitHub manifest", status.githubManifest.reachable ? (status.githubManifest.documentCount + " docs · version " + (status.githubManifest.version || "unknown")) : ("Error" + (status.githubManifest.error ? (" · " + status.githubManifest.error) : ""))));
+      statusRows.push(kvRow("Freshness", status.freshness.state + " · " + status.freshness.reason));
+      els.statusDetails.innerHTML = statusRows.join("");
 
-      els.recentDocs.innerHTML = status.cloudflareIndex.recentDocs.length
-        ? status.cloudflareIndex.recentDocs.map((doc) => `
-            <div class="item">
-              <div class="item-head">
-                <div class="item-title">${escapeHtml(doc.title)}</div>
-                <button class="ghost" data-doc-id="${escapeHtml(doc.id)}">Open</button>
-              </div>
-              <div class="item-meta">${escapeHtml(doc.id)} · ${escapeHtml(doc.type)} · ${escapeHtml(doc.path)} · updated ${escapeHtml(doc.updated_at || "unknown")}</div>
-              <div class="chips">${doc.tags.map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`).join("")}</div>
-            </div>`).join("")
-        : `<div class="muted-box">No indexed documents are available for this profile.</div>`;
-
+      if (status.cloudflareIndex.recentDocs.length > 0) {
+        var recentHtml = "";
+        for (var i = 0; i < status.cloudflareIndex.recentDocs.length; i += 1) {
+          var doc = status.cloudflareIndex.recentDocs[i];
+          recentHtml += '<div class="item">';
+          recentHtml += '<div class="item-head">';
+          recentHtml += '<div class="item-title">' + escapeHtml(doc.title) + '</div>';
+          recentHtml += '<button class="ghost" data-open-doc="' + escapeHtml(doc.id) + '">Open</button>';
+          recentHtml += '</div>';
+          recentHtml += '<div class="item-meta">' + escapeHtml(doc.id) + ' · ' + escapeHtml(doc.type) + ' · ' + escapeHtml(doc.path) + ' · updated ' + escapeHtml(doc.updated_at || 'unknown') + '</div>';
+          recentHtml += '<div class="chips">';
+          for (var j = 0; j < doc.tags.length; j += 1) {
+            recentHtml += '<span class="chip">' + escapeHtml(doc.tags[j]) + '</span>';
+          }
+          recentHtml += '</div></div>';
+        }
+        els.recentDocs.innerHTML = recentHtml;
+      } else {
+        els.recentDocs.innerHTML = '<div class="muted-box">No indexed documents are available for this profile.</div>';
+      }
     }
 
     function renderCompare(compare) {
@@ -679,104 +532,90 @@ function htmlPage(): string {
 
       els.compareState.textContent = compare.summary.state;
       els.compareState.className = "value badge " + badgeClass(compare.summary.state);
-      els.compareSummary.textContent = `${compare.summary.added} added · ${compare.summary.removed} removed · ${compare.summary.changed} changed`;
+      els.compareSummary.textContent = compare.summary.added + " added · " + compare.summary.removed + " removed · " + compare.summary.changed + " changed";
 
-      const rows = [];
+      var parts = [];
       if (compare.error) {
-        rows.push(`<div class="muted-box">${escapeHtml(compare.error)}</div>`);
+        parts.push('<div class="muted-box">' + escapeHtml(compare.error) + '</div>');
       }
+      parts.push(renderDocSection("Added documents", compare.addedDocs, false));
+      parts.push(renderDocSection("Removed documents", compare.removedDocs, false));
+      parts.push(renderChangedSection(compare.changedDocs));
+      els.compareDetails.innerHTML = parts.join("");
+    }
 
-      rows.push(`
-        <div class="item">
-          <div class="item-head"><div class="item-title">Added documents</div><div class="item-meta">${compare.addedDocs.length}</div></div>
-          <div class="list">${compare.addedDocs.length ? compare.addedDocs.map(renderMiniDoc).join("") : `<div class="small-muted">None</div>`}</div>
-        </div>
-      `);
+    function renderDocSection(title, docs, isChanged) {
+      var html = '<div class="item"><div class="item-head"><div class="item-title">' + escapeHtml(title) + '</div><div class="item-meta">' + docs.length + '</div></div>';
+      if (docs.length === 0) {
+        html += '<div class="small-muted">None</div>';
+      } else {
+        html += '<div class="list">';
+        for (var i = 0; i < docs.length; i += 1) {
+          html += renderMiniDoc(docs[i], isChanged);
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+      return html;
+    }
 
-      rows.push(`
-        <div class="item">
-          <div class="item-head"><div class="item-title">Removed documents</div><div class="item-meta">${compare.removedDocs.length}</div></div>
-          <div class="list">${compare.removedDocs.length ? compare.removedDocs.map(renderMiniDoc).join("") : `<div class="small-muted">None</div>`}</div>
-        </div>
-      `);
-
-      rows.push(`
-        <div class="item">
-          <div class="item-head"><div class="item-title">Changed documents</div><div class="item-meta">${compare.changedDocs.length}</div></div>
-          <div class="list">${compare.changedDocs.length ? compare.changedDocs.map(renderChangeDoc).join("") : `<div class="small-muted">None</div>`}</div>
-        </div>
-      `);
-
-      els.compareDetails.innerHTML = rows.join("");
+    function renderChangedSection(docs) {
+      var html = '<div class="item"><div class="item-head"><div class="item-title">Changed documents</div><div class="item-meta">' + docs.length + '</div></div>';
+      if (docs.length === 0) {
+        html += '<div class="small-muted">None</div>';
+      } else {
+        html += '<div class="list">';
+        for (var i = 0; i < docs.length; i += 1) {
+          html += renderChangeDoc(docs[i]);
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+      return html;
     }
 
     function renderMiniDoc(doc) {
-      return `
-        <div class="item">
-          <div class="item-head">
-            <div class="item-title">${escapeHtml(doc.title)}</div>
-            <button class="ghost" data-open-doc="${escapeHtml(doc.id)}">Open</button>
-          </div>
-          <div class="item-meta">${escapeHtml(doc.id)} · ${escapeHtml(doc.type)} · ${escapeHtml(doc.path)}</div>
-          <div class="small-muted">${escapeHtml(doc.summary || "")}</div>
-        </div>
-      `;
+      return '<div class="item"><div class="item-head"><div class="item-title">' + escapeHtml(doc.title) + '</div><button class="ghost" data-open-doc="' + escapeHtml(doc.id) + '">Open</button></div><div class="item-meta">' + escapeHtml(doc.id) + ' · ' + escapeHtml(doc.type) + ' · ' + escapeHtml(doc.path) + '</div><div class="small-muted">' + escapeHtml(doc.summary || "") + '</div></div>';
     }
 
     function renderChangeDoc(doc) {
-      const changes = doc.changes.map((change) => `
-        <div class="chip">${escapeHtml(change.field)} changed</div>
-      `).join("");
-      return `
-        <div class="item">
-          <div class="item-head">
-            <div class="item-title">${escapeHtml(doc.title)}</div>
-            <button class="ghost" data-open-doc="${escapeHtml(doc.id)}">Open</button>
-          </div>
-          <div class="item-meta">${escapeHtml(doc.id)} · ${escapeHtml(doc.type)} · ${escapeHtml(doc.path)}</div>
-          <div class="chips">${changes}</div>
-        </div>
-      `;
+      var changes = "";
+      for (var i = 0; i < doc.changes.length; i += 1) {
+        changes += '<span class="chip">' + escapeHtml(doc.changes[i].field) + ' changed</span>';
+      }
+      return '<div class="item"><div class="item-head"><div class="item-title">' + escapeHtml(doc.title) + '</div><button class="ghost" data-open-doc="' + escapeHtml(doc.id) + '">Open</button></div><div class="item-meta">' + escapeHtml(doc.id) + ' · ' + escapeHtml(doc.type) + ' · ' + escapeHtml(doc.path) + '</div><div class="chips">' + changes + '</div></div>';
     }
 
     function renderSearch(results) {
       state.searchResults = results || [];
-      els.searchResults.innerHTML = results && results.length
-        ? results.map((result) => `
-            <div class="item">
-              <div class="item-head">
-                <div>
-                  <div class="item-title">${escapeHtml(result.title)}</div>
-                  <div class="item-meta">${escapeHtml(result.id)} · ${escapeHtml(result.type)} · score ${escapeHtml(String(result.score))} · ${escapeHtml(result.confidence)}</div>
-                </div>
-                <button class="ghost" data-open-doc="${escapeHtml(result.id)}">Open</button>
-              </div>
-              <div class="small-muted">${escapeHtml(result.summary || "")}</div>
-              <div class="chips">${result.tags.map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`).join("")}</div>
-            </div>
-          `).join("")
-        : `<div class="muted-box">Run a search to inspect the exact indexed data used by MCP.</div>`;
+      if (!results || results.length === 0) {
+        els.searchResults.innerHTML = '<div class="muted-box">Run a search to inspect the exact indexed data used by MCP.</div>';
+        return;
+      }
 
+      var html = "";
+      for (var i = 0; i < results.length; i += 1) {
+        var result = results[i];
+        html += '<div class="item">';
+        html += '<div class="item-head"><div><div class="item-title">' + escapeHtml(result.title) + '</div><div class="item-meta">' + escapeHtml(result.id) + ' · ' + escapeHtml(result.type) + ' · score ' + escapeHtml(String(result.score)) + ' · ' + escapeHtml(result.confidence) + '</div></div><button class="ghost" data-open-doc="' + escapeHtml(result.id) + '">Open</button></div>';
+        html += '<div class="small-muted">' + escapeHtml(result.summary || "") + '</div><div class="chips">';
+        for (var j = 0; j < result.tags.length; j += 1) {
+          html += '<span class="chip">' + escapeHtml(result.tags[j]) + '</span>';
+        }
+        html += '</div></div>';
+      }
+      els.searchResults.innerHTML = html;
     }
 
     function renderDocument(document) {
       state.document = document;
       if (!document) return;
-      els.docMeta.innerHTML = `<strong>${escapeHtml(document.metadata.title)}</strong><br>${escapeHtml(document.metadata.id)} · ${escapeHtml(document.metadata.type)} · ${escapeHtml(document.metadata.path)}`;
+      els.docMeta.innerHTML = '<strong>' + escapeHtml(document.metadata.title) + '</strong><br>' + escapeHtml(document.metadata.id) + ' · ' + escapeHtml(document.metadata.type) + ' · ' + escapeHtml(document.metadata.path);
       els.docBody.textContent = document.body || "";
     }
 
-    function escapeHtml(value) {
-      return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
-
     async function loadProfiles() {
-      const data = await requestJson(`${API_BASE}/profiles`);
+      var data = await requestJson(API_BASE + "/profiles");
       state.profiles = data.profiles || [];
       renderProfileList();
     }
@@ -785,47 +624,55 @@ function htmlPage(): string {
       if (!state.profile) return;
       if (!state.token) {
         els.profileSummary.textContent = "Token required to load profile data";
-        els.statusDetails.innerHTML = `<div class="muted-box">Enter a bearer token to load Cloudflare and GitHub state.</div>`;
+        els.statusDetails.innerHTML = '<div class="muted-box">Enter a bearer token to load Cloudflare and GitHub state.</div>';
         return;
       }
 
-      const [status, compare] = await Promise.all([
-        requestJson(`${API_BASE}/status?profile=${encodeURIComponent(state.profile)}`),
-        requestJson(`${API_BASE}/compare?profile=${encodeURIComponent(state.profile)}`),
+      var results = await Promise.all([
+        requestJson(API_BASE + "/status?profile=" + encodeURIComponent(state.profile)),
+        requestJson(API_BASE + "/compare?profile=" + encodeURIComponent(state.profile)),
       ]);
-      renderStatus(status);
-      renderCompare(compare);
-      els.profileSummary.textContent = `${state.profile} · ${status.cloudflareIndex.documentCount} indexed docs`;
+      renderStatus(results[0]);
+      renderCompare(results[1]);
+      els.profileSummary.textContent = state.profile + " · " + results[0].cloudflareIndex.documentCount + " indexed docs";
     }
 
     async function runSearch() {
       if (!state.profile) return;
-      const query = els.searchInput.value.trim();
+      var query = els.searchInput.value.trim();
       state.searchQuery = query;
       if (!query) {
         renderSearch([]);
         return;
       }
-      const data = await requestJson(`${API_BASE}/search?profile=${encodeURIComponent(state.profile)}&q=${encodeURIComponent(query)}&limit=10`);
+      var data = await requestJson(API_BASE + "/search?profile=" + encodeURIComponent(state.profile) + "&q=" + encodeURIComponent(query) + "&limit=10");
       renderSearch(data.results || []);
     }
 
     async function openDocument(id) {
       if (!id) return;
-      const data = await requestJson(`${API_BASE}/document?profile=${encodeURIComponent(state.profile)}&id=${encodeURIComponent(id)}`);
+      var data = await requestJson(API_BASE + "/document?profile=" + encodeURIComponent(state.profile) + "&id=" + encodeURIComponent(id));
       renderDocument(data);
     }
 
     async function reindex() {
-      const result = await requestJson(`${API_BASE}/reindex`, {
+      var result = await requestJson(API_BASE + "/reindex", {
         method: "POST",
         body: JSON.stringify({ profile: state.profile }),
       });
       await loadOverview();
-      els.profileSummary.textContent = `Reindexed ${result.profile} · ${result.documentCount} docs`;
+      els.profileSummary.textContent = "Reindexed " + result.profile + " · " + result.documentCount + " docs";
     }
 
-    els.saveTokenBtn.addEventListener("click", async () => {
+    function showError(error) {
+      var message = error instanceof Error ? error.message : String(error);
+      els.profileSummary.textContent = message;
+      els.freshnessReason.textContent = message;
+      els.tokenDot.className = "dot bad";
+      els.tokenStateText.textContent = "Request failed";
+    }
+
+    els.saveTokenBtn.addEventListener("click", async function () {
       setToken(els.tokenInput.value);
       try {
         await loadOverview();
@@ -834,14 +681,14 @@ function htmlPage(): string {
       }
     });
 
-    els.clearTokenBtn.addEventListener("click", () => {
+    els.clearTokenBtn.addEventListener("click", function () {
       setToken("");
-      els.statusDetails.innerHTML = `<div class="muted-box">Token cleared. Re-enter a bearer token to inspect live data.</div>`;
-      els.compareDetails.innerHTML = `<div class="muted-box">Comparison data is hidden until a token is provided.</div>`;
+      els.statusDetails.innerHTML = '<div class="muted-box">Token cleared. Re-enter a bearer token to inspect live data.</div>';
+      els.compareDetails.innerHTML = '<div class="muted-box">Comparison data is hidden until a token is provided.</div>';
       renderSearch([]);
     });
 
-    els.refreshBtn.addEventListener("click", async () => {
+    els.refreshBtn.addEventListener("click", async function () {
       try {
         await loadOverview();
       } catch (error) {
@@ -849,7 +696,7 @@ function htmlPage(): string {
       }
     });
 
-    els.reindexBtn.addEventListener("click", async () => {
+    els.reindexBtn.addEventListener("click", async function () {
       try {
         await reindex();
       } catch (error) {
@@ -857,7 +704,7 @@ function htmlPage(): string {
       }
     });
 
-    els.searchBtn.addEventListener("click", async () => {
+    els.searchBtn.addEventListener("click", async function () {
       try {
         await runSearch();
       } catch (error) {
@@ -865,7 +712,7 @@ function htmlPage(): string {
       }
     });
 
-    els.searchInput.addEventListener("keydown", async (event) => {
+    els.searchInput.addEventListener("keydown", async function (event) {
       if (event.key === "Enter") {
         event.preventDefault();
         try {
@@ -876,7 +723,7 @@ function htmlPage(): string {
       }
     });
 
-    els.profileSelect.addEventListener("change", async () => {
+    els.profileSelect.addEventListener("change", async function () {
       state.profile = els.profileSelect.value;
       els.profileSummary.textContent = state.profile;
       try {
@@ -889,18 +736,10 @@ function htmlPage(): string {
       }
     });
 
-    function showError(error) {
-      const message = error instanceof Error ? error.message : String(error);
-      els.profileSummary.textContent = message;
-      els.freshnessReason.textContent = message;
-      els.tokenDot.className = "dot bad";
-      els.tokenStateText.textContent = "Request failed";
-    }
-
-    document.addEventListener("click", (event) => {
-      const target = event.target;
+    document.addEventListener("click", function (event) {
+      var target = event.target;
       if (!(target instanceof HTMLElement)) return;
-      const docId = target.getAttribute("data-open-doc");
+      var docId = target.getAttribute("data-open-doc");
       if (!docId) return;
       openDocument(docId).catch(showError);
     });
@@ -913,8 +752,8 @@ function htmlPage(): string {
         if (state.token && state.profile) {
           await loadOverview();
         } else {
-          els.statusDetails.innerHTML = `<div class="muted-box">Load a bearer token to inspect Cloudflare KV, GitHub manifest state, and compare output.</div>`;
-          els.compareDetails.innerHTML = `<div class="muted-box">Comparison data will appear here after a token is saved.</div>`;
+          els.statusDetails.innerHTML = '<div class="muted-box">Load a bearer token to inspect Cloudflare KV, GitHub manifest state, and compare output.</div>';
+          els.compareDetails.innerHTML = '<div class="muted-box">Comparison data will appear here after a token is saved.</div>';
         }
       } catch (error) {
         showError(error);
@@ -928,127 +767,178 @@ function htmlPage(): string {
 }
 
 function parseProfile(value: string | null): Profile {
-  if (!value || !PROFILES.includes(value as Profile)) {
-    throw new Error(`Invalid profile. Expected one of: ${PROFILES.join(", ")}`);
-  }
-  return value as Profile;
+	if (!value || !PROFILES.includes(value as Profile)) {
+		throw new Error(
+			`Invalid profile. Expected one of: ${PROFILES.join(", ")}`,
+		);
+	}
+	return value as Profile;
 }
 
 export function handleConsolePage(): Response {
-  return new Response(htmlPage(), {
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "no-store",
-    },
-  });
+	return new Response(htmlPage(), {
+		headers: {
+			"Content-Type": "text/html; charset=utf-8",
+			"Cache-Control": "no-store",
+		},
+	});
 }
 
 export async function handleConsoleProfiles(env: Env): Promise<Response> {
-  try {
-    const profiles = await getConsoleProfiles(env);
-    return json({ profiles });
-  } catch (error) {
-    return json(
-      {
-        error: "failed_to_load_profiles",
-        error_description: error instanceof Error ? error.message : String(error),
-      },
-      500
-    );
-  }
+	try {
+		const profiles = await getConsoleProfiles(env);
+		return json({ profiles });
+	} catch (error) {
+		return json(
+			{
+				error: "failed_to_load_profiles",
+				error_description:
+					error instanceof Error ? error.message : String(error),
+			},
+			500,
+		);
+	}
 }
 
-export async function handleConsoleStatus(request: Request, env: Env): Promise<Response> {
-  try {
-    const url = new URL(request.url);
-    const profile = parseProfile(url.searchParams.get("profile"));
-    const status = await getConsoleStatus(env, profile);
-    return json(status);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return json({ error: "failed_to_load_status", error_description: message }, 400);
-  }
+export async function handleConsoleStatus(
+	request: Request,
+	env: Env,
+): Promise<Response> {
+	try {
+		const url = new URL(request.url);
+		const profile = parseProfile(url.searchParams.get("profile"));
+		const status = await getConsoleStatus(env, profile);
+		return json(status);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		return json(
+			{ error: "failed_to_load_status", error_description: message },
+			400,
+		);
+	}
 }
 
-export async function handleConsoleCompare(request: Request, env: Env): Promise<Response> {
-  try {
-    const url = new URL(request.url);
-    const profile = parseProfile(url.searchParams.get("profile"));
-    const compare = await compareProfile(env, profile);
-    return json(compare);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return json({ error: "failed_to_compare", error_description: message }, 400);
-  }
+export async function handleConsoleCompare(
+	request: Request,
+	env: Env,
+): Promise<Response> {
+	try {
+		const url = new URL(request.url);
+		const profile = parseProfile(url.searchParams.get("profile"));
+		const compare = await compareProfile(env, profile);
+		return json(compare);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		return json(
+			{ error: "failed_to_compare", error_description: message },
+			400,
+		);
+	}
 }
 
-export async function handleConsoleSearch(request: Request, env: Env): Promise<Response> {
-  try {
-    const url = new URL(request.url);
-    const profile = parseProfile(url.searchParams.get("profile"));
-    const query = url.searchParams.get("q")?.trim() || "";
-    const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? "10") || 10, 1), 20);
-    if (!query) {
-      return json({ profile, query, total: 0, results: [], state: "empty" });
-    }
+export async function handleConsoleSearch(
+	request: Request,
+	env: Env,
+): Promise<Response> {
+	try {
+		const url = new URL(request.url);
+		const profile = parseProfile(url.searchParams.get("profile"));
+		const query = url.searchParams.get("q")?.trim() || "";
+		const limit = Math.min(
+			Math.max(Number(url.searchParams.get("limit") ?? "10") || 10, 1),
+			20,
+		);
 
-    const { index, results } = await getSearchResults(env, profile, query, limit);
-    if (!index) {
-      return json({
-        profile,
-        query,
-        total: 0,
-        results: [],
-        state: "missing",
-        message: `No search index found for profile \"${profile}\"`,
-      });
-    }
+		if (!query) {
+			return json({
+				profile,
+				query,
+				total: 0,
+				results: [],
+				state: "empty",
+			});
+		}
 
-    return json({
-      profile,
-      query,
-      total: results.length,
-      results,
-      state: "ok",
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return json({ error: "failed_to_search", error_description: message }, 400);
-  }
+		const data = await getSearchResults(env, profile, query, limit);
+		if (!data.index) {
+			return json({
+				profile,
+				query,
+				total: 0,
+				results: [],
+				state: "missing",
+				message: `No search index found for profile \"${profile}\"`,
+			});
+		}
+
+		return json({
+			profile,
+			query,
+			total: data.results.length,
+			results: data.results,
+			state: "ok",
+		});
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		return json(
+			{ error: "failed_to_search", error_description: message },
+			400,
+		);
+	}
 }
 
-export async function handleConsoleDocument(request: Request, env: Env): Promise<Response> {
-  try {
-    const url = new URL(request.url);
-    const profile = parseProfile(url.searchParams.get("profile"));
-    const id = url.searchParams.get("id")?.trim();
-    if (!id) {
-      return json({ error: "invalid_request", error_description: "id is required" }, 400);
-    }
+export async function handleConsoleDocument(
+	request: Request,
+	env: Env,
+): Promise<Response> {
+	try {
+		const url = new URL(request.url);
+		const profile = parseProfile(url.searchParams.get("profile"));
+		const id = url.searchParams.get("id")?.trim();
+		if (!id) {
+			return json(
+				{
+					error: "invalid_request",
+					error_description: "id is required",
+				},
+				400,
+			);
+		}
 
-    const document = await getDocument(env, profile, id);
-    return json(document);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const status = message.includes("not found") ? 404 : 400;
-    return json({ error: "failed_to_load_document", error_description: message }, status);
-  }
+		const document = await getDocument(env, profile, id);
+		return json(document);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		const status = message.includes("not found") ? 404 : 400;
+		return json(
+			{ error: "failed_to_load_document", error_description: message },
+			status,
+		);
+	}
 }
 
-export async function handleConsoleReindex(request: Request, env: Env): Promise<Response> {
-  try {
-    const body = (await request.json().catch(() => null)) as { profile?: string } | null;
-    const profile = parseProfile(body?.profile ?? null);
-    const index = await reindexProfile(env, profile);
-    return json({
-      ok: true,
-      profile,
-      version: index.version,
-      builtAt: index.builtAt,
-      documentCount: index.documents.length,
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return json({ error: "failed_to_reindex", error_description: message }, 400);
-  }
+export async function handleConsoleReindex(
+	request: Request,
+	env: Env,
+): Promise<Response> {
+	try {
+		const body = (await request.json().catch(() => null)) as {
+			profile?: string;
+		} | null;
+		const profile = parseProfile(body?.profile ?? null);
+		const index = await reindexProfile(env, profile);
+		return json({
+			ok: true,
+			profile,
+			version: index.version,
+			builtAt: index.builtAt,
+			documentCount: index.documents.length,
+		});
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		return json(
+			{ error: "failed_to_reindex", error_description: message },
+			400,
+		);
+	}
 }
