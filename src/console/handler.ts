@@ -24,6 +24,11 @@ function htmlPage(): string {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link
+      rel="icon"
+      type="image/png"
+      href="/favicon.png">
+
   <title>MCP Knowledge Console</title>
   <style>
     :root {
@@ -358,7 +363,7 @@ function htmlPage(): string {
     const state = {
       profiles: [],
       profile: "",
-      token: sessionStorage.getItem(TOKEN_KEY) || "",
+      token: localStorage.getItem(TOKEN_KEY) || "",
       status: null,
       compare: null,
       searchQuery: "",
@@ -415,9 +420,9 @@ function htmlPage(): string {
     function setToken(token) {
       state.token = token.trim();
       if (state.token) {
-        sessionStorage.setItem(TOKEN_KEY, state.token);
+        localStorage.setItem(TOKEN_KEY, state.token);
       } else {
-        sessionStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(TOKEN_KEY);
       }
       syncTokenState();
     }

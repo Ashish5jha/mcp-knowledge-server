@@ -300,7 +300,7 @@ Choose the simplest safe approach first.
 - `/console` can load the HTML shell
 - API calls require `Authorization: Bearer <token>`
 - UI allows user to paste token into an input
-- Store token in `sessionStorage`
+- Store token in `localStorage`
 - Include token in fetch headers
 
 Why this is preferred:
