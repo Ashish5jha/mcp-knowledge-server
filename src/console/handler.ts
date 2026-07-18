@@ -671,9 +671,6 @@ function htmlPage(): string {
             </div>`).join("")
         : `<div class="muted-box">No indexed documents are available for this profile.</div>`;
 
-      els.recentDocs.querySelectorAll("button[data-doc-id]").forEach((button) => {
-        button.addEventListener("click", () => openDocument(button.getAttribute("data-doc-id") || ""));
-      });
     }
 
     function renderCompare(compare) {
@@ -760,9 +757,6 @@ function htmlPage(): string {
           `).join("")
         : `<div class="muted-box">Run a search to inspect the exact indexed data used by MCP.</div>`;
 
-      els.searchResults.querySelectorAll("button[data-open-doc]").forEach((button) => {
-        button.addEventListener("click", () => openDocument(button.getAttribute("data-open-doc") || ""));
-      });
     }
 
     function renderDocument(document) {

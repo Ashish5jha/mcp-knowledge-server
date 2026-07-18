@@ -2,7 +2,11 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Env, PROFILES, Profile } from "../../types";
 import { getRegistry } from "../../registry/registry";
-import { getDocument, getSearchResults, reindexProfile } from "../../console/logic";
+import {
+	getDocument,
+	getSearchResults,
+	reindexProfile,
+} from "../../console/logic";
 
 /**
  * Register all four MCP tools on the given McpServer instance.
@@ -49,7 +53,12 @@ export function registerTools(server: McpServer, env: Env): void {
 				.describe("Max number of results to return"),
 		},
 		async ({ profile, query, limit }) => {
-			const index = await getCache<SearchIndex>(env, `index:${profile}`);
+			const { index, results } = await getSearchResults(
+				env,
+				profile,
+				query,
+				limit,
+			);
 			if (!index) {
 				return {
 					content: [
@@ -61,8 +70,7 @@ export function registerTools(server: McpServer, env: Env): void {
 				};
 			}
 
-			const queryTerms = tokenize(query);
-			if (queryTerms.length === 0) {
+			if (results.length === 0) {
 				return {
 					content: [
 						{
@@ -72,72 +80,6 @@ export function registerTools(server: McpServer, env: Env): void {
 					],
 				};
 			}
-
-			// Score each doc with weighted term overlap:
-			//   title match  → WEIGHT_TITLE  (3)
-			//   tag/keyword  → WEIGHT_TAGS   (2)
-			//   summary      → WEIGHT_SUMMARY (1)
-			const scores: Record<string, number> = {};
-
-			for (const doc of index.documents) {
-				let docScore = 0;
-
-				const titleTerms = new Set(tokenize(doc.title));
-				const tagTerms = new Set([
-					...doc.tags.flatMap(tokenize),
-					...doc.keywords.flatMap(tokenize),
-				]);
-				const summaryTerms = new Set(tokenize(doc.summary));
-
-				for (const term of queryTerms) {
-					if (titleTerms.has(term)) docScore += WEIGHT_TITLE;
-					else if (tagTerms.has(term)) docScore += WEIGHT_TAGS;
-					else if (summaryTerms.has(term)) docScore += WEIGHT_SUMMARY;
-				}
-
-				if (docScore > 0) {
-					scores[doc.id] = docScore;
-				}
-			}
-
-			if (Object.keys(scores).length === 0) {
-				return {
-					content: [
-						{
-							type: "text",
-							text: `No matching documents in profile "${profile}" for query: "${query}"`,
-						},
-					],
-				};
-			}
-
-			// Max weighted score if every term hit a title
-			const maxPossibleScore = queryTerms.length * WEIGHT_TITLE;
-
-			const results = Object.entries(scores)
-				.sort(([, a], [, b]) => b - a)
-				.slice(0, limit)
-				.map(([id, score]) => {
-					const doc = index.documents.find((d) => d.id === id)!;
-					const ratio = score / maxPossibleScore;
-					const confidence =
-						ratio >= 0.8
-							? "exact"
-							: ratio >= 0.4
-								? "partial"
-								: "related-only";
-					return {
-						id: doc.id,
-						title: doc.title,
-						type: doc.type,
-						summary: doc.summary,
-						tags: doc.tags,
-						related: doc.related,
-						path: doc.path,
-						score,
-						confidence,
-					};
-				});
 
 			return {
 				content: [
@@ -167,33 +109,35 @@ export function registerTools(server: McpServer, env: Env): void {
 				.describe("Document ID, as returned by search_knowledge"),
 		},
 		async ({ profile, id }) => {
-			const index = await getCache<SearchIndex>(env, `index:${profile}`);
-			if (!index) {
-				return {
-					content: [
-						{
-							type: "text",
-							text: `No search index found for profile "${profile}". Run reindex_profile first.`,
-						},
-					],
-				};
-			}
-
-			const doc = index.documents.find((d) => d.id === id);
-			if (!doc) {
-				return {
-					content: [
-						{
-							type: "text",
-							text: `Document "${id}" not found in profile "${profile}".`,
-						},
-					],
-				};
-			}
-
-			let body: string;
 			try {
-				body = await fetchRawDoc(env, profile, doc.path, doc.id);
+				const doc = await getDocument(env, profile, id);
+				return {
+					content: [
+						{
+							type: "text",
+							text: JSON.stringify(
+								{
+									id: doc.metadata.id,
+									title: doc.metadata.title,
+									type: doc.metadata.type,
+									tags: doc.metadata.tags,
+									keywords: doc.metadata.keywords,
+									related: doc.metadata.related,
+									summary: doc.metadata.summary,
+									updated_at: doc.metadata.updated_at,
+									priority: doc.metadata.priority,
+									profile,
+								},
+								null,
+								2,
+							),
+						},
+						{
+							type: "text",
+							text: doc.body,
+						},
+					],
+				};
 			} catch (err: any) {
 				return {
 					content: [
@@ -204,36 +148,6 @@ export function registerTools(server: McpServer, env: Env): void {
 					],
 				};
 			}
-
-			// Return metadata and body as separate text blocks so an LLM can read
-			// Markdown natively without needing to unescape JSON.
-			return {
-				content: [
-					{
-						type: "text",
-						text: JSON.stringify(
-							{
-								id: doc.id,
-								title: doc.title,
-								type: doc.type,
-								tags: doc.tags,
-								keywords: doc.keywords,
-								related: doc.related,
-								summary: doc.summary,
-								updated_at: doc.updated_at,
-								priority: doc.priority,
-								profile,
-							},
-							null,
-							2,
-						),
-					},
-					{
-						type: "text",
-						text: body,
-					},
-				],
-			};
 		},
 	);
 
@@ -248,7 +162,7 @@ export function registerTools(server: McpServer, env: Env): void {
 		},
 		async ({ profile }) => {
 			try {
-				await buildIndex(env, profile);
+				await reindexProfile(env, profile);
 				return {
 					content: [
 						{
