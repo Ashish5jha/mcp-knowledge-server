@@ -41,10 +41,13 @@ export function handleOAuthDiscovery(workerUrl: string): Response {
 export async function handleRegister(request: Request, env: Env): Promise<Response> {
   let body: Record<string, unknown>;
   try {
-    body = (await request.json()) as Record<string, unknown>;
+    // Some clients send with charset suffix or text/plain — handle all cases
+    const text = await request.text();
+    body = JSON.parse(text) as Record<string, unknown>;
   } catch {
-    return jsonError(400, "invalid_request", "Request body must be JSON");
+    return jsonError(400, "invalid_request", "Request body must be valid JSON");
   }
+
 
   const redirectUris = body.redirect_uris as string[] | undefined;
   if (!redirectUris || !Array.isArray(redirectUris) || redirectUris.length === 0) {
