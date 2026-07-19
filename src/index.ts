@@ -89,6 +89,26 @@ export default {
 			return handleConsolePage();
 		}
 
+		if (url.pathname === "/favicon.png" && request.method === "GET") {
+			const faviconResponse = await fetch(
+				new URL(
+					"../favicon.png",
+					(import.meta as ImportMeta & { url: string }).url,
+				),
+			);
+			if (!faviconResponse.ok || !faviconResponse.body) {
+				return new Response("Not found", { status: 404 });
+			}
+
+			return new Response(faviconResponse.body, {
+				status: 200,
+				headers: {
+					"Content-Type": "image/png",
+					"Cache-Control": "public, max-age=86400, immutable",
+				},
+			});
+		}
+
 		if (
 			url.pathname === "/api/console/profiles" &&
 			request.method === "GET"
