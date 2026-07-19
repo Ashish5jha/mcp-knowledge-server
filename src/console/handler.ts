@@ -344,6 +344,12 @@ function htmlPage(): string {
     </div>
   </section>
 
+  <!-- Source State as a separate full-length card above the columns -->
+  <section class="panel" style="margin-bottom: 16px;">
+    <div class="panel-title">Source state</div>
+    <div id="statusDetails"></div>
+  </section>
+
   <!-- main -->
   <section class="main">
 
@@ -354,8 +360,8 @@ function htmlPage(): string {
           <span>Document inventory</span>
           <span class="item-meta" id="inventoryCountHeader"></span>
         </div>
+        <div id="inventoryPagination" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;"></div>
         <div class="item-list" id="recentDocs"></div>
-        <div id="inventoryPagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; gap: 8px;"></div>
       </div>
       <div>
         <div class="panel-title">Comparison details</div>
@@ -387,12 +393,6 @@ function htmlPage(): string {
       </div>
     </div>
 
-  </section>
-
-  <!-- Source State as a separate full-length card at the bottom -->
-  <section class="panel" style="margin-top: 16px;">
-    <div class="panel-title">Source state</div>
-    <div id="statusDetails"></div>
   </section>
 
 </div>
