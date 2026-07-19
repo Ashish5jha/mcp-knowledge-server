@@ -243,7 +243,7 @@ async function getCloudflareIndex(
 		documentCount: Array.isArray(index.documents)
 			? index.documents.length
 			: 0,
-		recentDocs: sortByRecentUpdate(index.documents).slice(0, 5),
+		recentDocs: sortByRecentUpdate(index.documents),
 	};
 }
 

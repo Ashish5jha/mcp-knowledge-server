@@ -152,8 +152,9 @@ function htmlPage(): string {
     button:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
     .btn-primary:hover:not(:disabled) { background: var(--accent-h); border-color: var(--accent-h); }
-    .btn-ghost { background: transparent; border-color: transparent; color: var(--muted); }
-    .btn-ghost:hover:not(:disabled) { background: var(--bg); border-color: var(--border); color: var(--text); }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-ghost:hover:not(:disabled) { background: var(--bg); border-color: var(--border-2); color: var(--text); }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     .status-row {
       display: flex;
@@ -346,15 +347,15 @@ function htmlPage(): string {
   <!-- main -->
   <section class="main">
 
-    <!-- left: source state + inventory + compare -->
+    <!-- left: inventory + compare -->
     <div class="panel stack">
       <div>
-        <div class="panel-title">Source state</div>
-        <div id="statusDetails"></div>
-      </div>
-      <div>
-        <div class="panel-title">Document inventory</div>
+        <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <span>Document inventory</span>
+          <span class="item-meta" id="inventoryCountHeader"></span>
+        </div>
         <div class="item-list" id="recentDocs"></div>
+        <div id="inventoryPagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; gap: 8px;"></div>
       </div>
       <div>
         <div class="panel-title">Comparison details</div>
@@ -377,13 +378,23 @@ function htmlPage(): string {
         <div class="item-list" id="searchResults"></div>
       </div>
       <div class="doc-viewer">
-        <div class="panel-title">Document viewer</div>
+        <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span>Document viewer</span>
+          <button id="copyDocBtn" class="btn-ghost" style="font-size: 11px; padding: 4px 8px; display: none;">Copy Content</button>
+        </div>
         <div class="muted-box" id="docMeta">Choose a search result or recent document to inspect the exact content returned by get_document.</div>
         <div class="doc-body"><pre id="docBody">No document selected.</pre></div>
       </div>
     </div>
 
   </section>
+
+  <!-- Source State as a separate full-length card at the bottom -->
+  <section class="panel" style="margin-top: 16px;">
+    <div class="panel-title">Source state</div>
+    <div id="statusDetails"></div>
+  </section>
+
 </div>
 
 <script>
@@ -401,6 +412,7 @@ function htmlPage(): string {
     searchQuery:   localStorage.getItem(SEARCH_KEY)  || "",
     searchResults: [],
     document:      null,
+    inventoryPage: 0,
   };
 
   const els = {
@@ -485,6 +497,20 @@ function htmlPage(): string {
     return '<div class="kv"><div class="k">'+esc(key)+'</div><div class="v">'+esc(value)+'</div></div>';
   }
 
+  function formatVersion(v) {
+    if (!v) return "—";
+    if (v.includes("T") && v.endsWith("Z")) {
+      try {
+        var d = new Date(v);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) + ", " + 
+                 d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+      } catch(e) {}
+    }
+    return v;
+  }
+
   function renderProfileList() {
     var html = "";
     for (var i=0; i<state.profiles.length; i++) {
@@ -511,13 +537,16 @@ function htmlPage(): string {
     state.status = status;
     if (!status) return;
 
-    els.indexVersion.textContent = status.cloudflareIndex.exists ? (status.cloudflareIndex.version||"unknown") : "missing";
+    var indexVerStr = formatVersion(status.cloudflareIndex.version);
+    var manifestVerStr = formatVersion(status.githubManifest.version);
+
+    els.indexVersion.textContent = status.cloudflareIndex.exists ? indexVerStr : "missing";
     els.indexBuiltAt.textContent = status.cloudflareIndex.exists && status.cloudflareIndex.builtAt
-      ? "Built at "+status.cloudflareIndex.builtAt : "Built at —";
+      ? "Built at "+formatVersion(status.cloudflareIndex.builtAt) : "Built at —";
     els.indexCount.textContent = status.cloudflareIndex.exists
       ? status.cloudflareIndex.documentCount+" documents in Cloudflare KV" : "No Cloudflare index found";
 
-    els.manifestVersion.textContent = status.githubManifest.reachable ? (status.githubManifest.version||"unknown") : "error";
+    els.manifestVersion.textContent = status.githubManifest.reachable ? manifestVerStr : "error";
     els.manifestSource.textContent  = status.githubManifest.manifestUrl || "Source unavailable";
     els.manifestCount.textContent   = status.githubManifest.reachable
       ? status.githubManifest.documentCount+" documents in GitHub manifest"
@@ -531,17 +560,32 @@ function htmlPage(): string {
     rows.push(kvRow("Registry manifest URL", status.registry ? status.registry.manifestUrl : "Missing"));
     rows.push(kvRow("Registry raw base",     status.registry ? status.registry.rawBase     : "Missing"));
     rows.push(kvRow("Cloudflare index", status.cloudflareIndex.exists
-      ? status.cloudflareIndex.documentCount+" docs · version "+(status.cloudflareIndex.version||"unknown") : "Missing"));
+      ? status.cloudflareIndex.documentCount+" docs · version "+indexVerStr : "Missing"));
     rows.push(kvRow("GitHub manifest", status.githubManifest.reachable
-      ? status.githubManifest.documentCount+" docs · version "+(status.githubManifest.version||"unknown")
+      ? status.githubManifest.documentCount+" docs · version "+manifestVerStr
       : "Error"+(status.githubManifest.error ? " · "+status.githubManifest.error : "")));
     rows.push(kvRow("Freshness", status.freshness.state+" · "+status.freshness.reason));
     els.statusDetails.innerHTML = '<div class="kvlist">'+rows.join("")+'</div>';
 
-    if (status.cloudflareIndex.recentDocs.length>0) {
+    var docs = status.cloudflareIndex.recentDocs || [];
+    var totalDocs = docs.length;
+    var pageSize = 5;
+    var totalPages = Math.ceil(totalDocs / pageSize) || 1;
+
+    if (state.inventoryPage >= totalPages) state.inventoryPage = totalPages - 1;
+    if (state.inventoryPage < 0) state.inventoryPage = 0;
+
+    var page = state.inventoryPage;
+    var start = page * pageSize;
+    var end = Math.min(start + pageSize, totalDocs);
+
+    var countHeader = document.getElementById("inventoryCountHeader");
+    if (countHeader) countHeader.textContent = totalDocs + " total files";
+
+    if (totalDocs > 0) {
       var h = "";
-      for (var i=0; i<status.cloudflareIndex.recentDocs.length; i++) {
-        var doc = status.cloudflareIndex.recentDocs[i];
+      for (var i = start; i < end; i++) {
+        var doc = docs[i];
         h += '<div class="item">';
         h += '<div class="item-row"><span class="item-name">'+esc(doc.title)+'</span>';
         h += '<button class="btn-ghost" style="font-size:12px;padding:4px 10px" data-open-doc="'+esc(doc.id)+'">Open</button></div>';
@@ -551,8 +595,15 @@ function htmlPage(): string {
         h += '</div></div>';
       }
       els.recentDocs.innerHTML = h;
+
+      var pagHtml = "";
+      pagHtml += '<button id="prevInvBtn" class="btn-ghost" style="padding:4px 8px;font-size:12px;"' + (page === 0 ? ' disabled' : '') + '>Previous</button>';
+      pagHtml += '<span class="item-meta">Page ' + (page + 1) + ' of ' + totalPages + '</span>';
+      pagHtml += '<button id="nextInvBtn" class="btn-ghost" style="padding:4px 8px;font-size:12px;"' + (page >= totalPages - 1 ? ' disabled' : '') + '>Next</button>';
+      document.getElementById("inventoryPagination").innerHTML = pagHtml;
     } else {
       els.recentDocs.innerHTML = '<div class="muted-box">No indexed documents available for this profile.</div>';
+      document.getElementById("inventoryPagination").innerHTML = '';
     }
   }
 
@@ -624,7 +675,12 @@ function htmlPage(): string {
 
   function renderDocument(doc) {
     state.document = doc;
-    if (!doc) return;
+    var copyBtn = document.getElementById("copyDocBtn");
+    if (!doc) {
+      if (copyBtn) copyBtn.style.display = "none";
+      return;
+    }
+    if (copyBtn) copyBtn.style.display = "inline-block";
     els.docMeta.innerHTML = '<strong>'+esc(doc.metadata.title)+'</strong><br>'
       +esc(doc.metadata.id)+' · '+esc(doc.metadata.type)+' · '+esc(doc.metadata.path);
     els.docBody.textContent = doc.body||"";
@@ -643,6 +699,7 @@ function htmlPage(): string {
       els.statusDetails.innerHTML = '<div class="muted-box">Enter a bearer token to load Cloudflare and GitHub state.</div>';
       return;
     }
+    els.profileSummary.textContent = "Loading overview data...";
     var results = await Promise.all([
       requestJson(API_BASE+"/status?profile="+encodeURIComponent(state.profile)),
       requestJson(API_BASE+"/compare?profile="+encodeURIComponent(state.profile)),
@@ -658,20 +715,43 @@ function htmlPage(): string {
     state.searchQuery = query;
     query ? localStorage.setItem(SEARCH_KEY, query) : localStorage.removeItem(SEARCH_KEY);
     if (!query) { renderSearch([]); return; }
-    var data = await requestJson(API_BASE+"/search?profile="+encodeURIComponent(state.profile)+"&q="+encodeURIComponent(query)+"&limit=10");
-    renderSearch(data.results||[]);
+
+    els.searchResults.innerHTML = '<div class="muted-box"><span style="display:inline-block;animation:spin 1s linear infinite;margin-right:8px;">⏳</span>Searching index...</div>';
+    els.searchBtn.disabled = true;
+
+    try {
+      var data = await requestJson(API_BASE+"/search?profile="+encodeURIComponent(state.profile)+"&q="+encodeURIComponent(query)+"&limit=10");
+      renderSearch(data.results||[]);
+    } catch (e) {
+      showError(e);
+    } finally {
+      els.searchBtn.disabled = false;
+    }
   }
 
   async function openDocument(id) {
     if (!id) return;
-    var data = await requestJson(API_BASE+"/document?profile="+encodeURIComponent(state.profile)+"&id="+encodeURIComponent(id));
-    renderDocument(data);
+    els.docBody.textContent = "Loading document...";
+    try {
+      var data = await requestJson(API_BASE+"/document?profile="+encodeURIComponent(state.profile)+"&id="+encodeURIComponent(id));
+      renderDocument(data);
+    } catch(e) {
+      els.docBody.textContent = "Failed to load: " + e.message;
+      showError(e);
+    }
   }
 
   async function reindex() {
-    var result = await requestJson(API_BASE+"/reindex", { method:"POST", body:JSON.stringify({profile:state.profile}) });
-    await loadOverview();
-    els.profileSummary.textContent = "Reindexed "+result.profile+" · "+result.documentCount+" docs";
+    els.profileSummary.textContent = "Reindexing profile. Please wait...";
+    var btn = document.getElementById("reindexBtn");
+    if (btn) btn.disabled = true;
+    try {
+      var result = await requestJson(API_BASE+"/reindex", { method:"POST", body:JSON.stringify({profile:state.profile}) });
+      await loadOverview();
+      els.profileSummary.textContent = "Reindexed "+result.profile+" · "+result.documentCount+" docs";
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   }
 
   function showError(err) {
@@ -713,6 +793,7 @@ function htmlPage(): string {
 
   els.profileSelect.addEventListener("change", async function() {
     state.profile = els.profileSelect.value;
+    state.inventoryPage = 0;
     localStorage.setItem(PROFILE_KEY, state.profile);
     els.profileSummary.textContent = state.profile;
     try {
@@ -724,6 +805,16 @@ function htmlPage(): string {
   document.addEventListener("click", function(ev) {
     var t = ev.target;
     if (!(t instanceof HTMLElement)) return;
+
+    if (t.id === "prevInvBtn") {
+      state.inventoryPage--;
+      if (state.status) renderStatus(state.status);
+    }
+    if (t.id === "nextInvBtn") {
+      state.inventoryPage++;
+      if (state.status) renderStatus(state.status);
+    }
+
     var id = t.getAttribute("data-open-doc");
     if (id) openDocument(id).catch(showError);
   });
@@ -732,6 +823,19 @@ function htmlPage(): string {
     syncTokenState();
     els.tokenInput.value = state.token;
     if (state.searchQuery) els.searchInput.value = state.searchQuery;
+
+    var copyBtn = document.getElementById("copyDocBtn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", function() {
+        if (state.document && state.document.body) {
+          navigator.clipboard.writeText(state.document.body).then(function() {
+            copyBtn.textContent = "Copied!";
+            setTimeout(function() { copyBtn.textContent = "Copy Content"; }, 1500);
+          });
+        }
+      });
+    }
+
     try {
       await loadProfiles();
       if (state.token && state.profile) {
